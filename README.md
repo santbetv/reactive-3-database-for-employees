@@ -20,11 +20,21 @@
 
 ![Screenshot8](img/mono-mas-utilizados.png)
 
+## Conexión a base de datos
+
+![Screenshot9](img/conexion-R2DBC.png)
+
+## Filtro flatMap
+
+![Screenshot10](img/uso-flatmap.png)
+
 ## Tipo de configuración
 
 ¿Cuál elegir?
+
 - Usa record si necesitas un objeto simple, inmutable y solo para almacenar datos (ejemplo: DTOs o respuestas de API).
-- Usa Lombok si trabajas con clases más complejas, necesitas mutabilidad, herencia o quieres personalizar el comportamiento fácilmente.
+- Usa Lombok si trabajas con clases más complejas, necesitas mutabilidad, herencia o quieres personalizar el
+  comportamiento fácilmente.
 
 ### Guia
 

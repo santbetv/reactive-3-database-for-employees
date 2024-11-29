@@ -1,60 +1,65 @@
 package com.sbvdeveloper.employeereact.service;
 
-import com.sbvdeveloper.employeereact.config.ConfigDataEmployee;
 import com.sbvdeveloper.employeereact.domain.Employee;
+import com.sbvdeveloper.employeereact.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
-    private final ConfigDataEmployee configDataEmployee;
+    private final EmployeeRepository employeeRepository;
 
-    public EmployeeServiceImpl(ConfigDataEmployee configDataEmployee) {
-        this.configDataEmployee = configDataEmployee;
+    //La funcion de flatMap es transformar el objeto que se recibe en el parametro en otro objeto
+    // y devolverlo como un Mono
+
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Flux<Employee> getAllEmployees() {
-        return Flux.fromIterable(configDataEmployee.crearBDMemoria());
-    }
-    
-    @Override
-    public Mono<Employee> getEmployeeById(Long id) {
-        return this.getAllEmployees()
-                .filter(employee -> employee.getId().equals(id))
-                .next();
+        return this.employeeRepository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Mono<Employee> getEmployeeById(Long id) {
+        return this.employeeRepository.findById(id);
+    }
+
+    @Override
+    @Transactional
     public Mono<Employee> saveEmployee(Employee employee) {
+        employee.setIsNew(true);
         return this.getEmployeeById(employee.getId())
-                .switchIfEmpty(Mono.just(employee).map(p -> {
-                    configDataEmployee.crearBDMemoria().add(employee);
-                    return p;
-                }))
+                .switchIfEmpty(Mono.just(employee).flatMap(p -> this.employeeRepository.save(p)))
                 .then(Mono.just(employee));
 
     }
 
     @Override
+    @Transactional
     public Mono<Employee> updateEmployee(Long id, Employee employee) {
         return this.getEmployeeById(id)
-                .map(p -> {
+                .flatMap(p -> {
                     p.setName(employee.getName());
                     p.setRole(employee.getRole());
-                    return p;
-                }).switchIfEmpty(Mono.error(new Exception("El empleado NO existe")));
+                    return this.employeeRepository.save(p).thenReturn(p);
+                })
+                .switchIfEmpty(Mono.error(new Exception("El empleado NO existe")));
     }
 
     @Override
+    @Transactional
     public Mono<Employee> deleteEmployee(Long id) {
         return this.getEmployeeById(id)
-                .map(employee -> {
-                    configDataEmployee.crearBDMemoria().removeIf(e -> e.getId().equals(id));
-                    return employee;
-                })
+                .flatMap(employee -> this.employeeRepository
+                        .deleteById(employee.getId())
+                        .thenReturn(employee))
                 .switchIfEmpty(Mono.error(new Exception("El empleado NO existe")));
     }
 }

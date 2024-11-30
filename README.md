@@ -28,7 +28,13 @@
 
 ![Screenshot10](img/uso-flatmap.png)
 
-## Tipo de configuración
+## Tipo de configuración mongo
+
+![Screenshot11](img/entidades-mongo.png)
+
+## Configuración de la base de datos mongo
+
+![Screenshot12](img/conexion-mongo.png)
 
 ¿Cuál elegir?
 

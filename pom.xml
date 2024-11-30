@@ -61,6 +61,20 @@
             <version>1.0.1.RELEASE</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.springframework/spring-tx -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>6.1.12</version>
+        </dependency>
+
+
+        <!-- MongoDB Reactive Dependency -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+        </dependency>
+
         <!-- Flyway para manejar migraciones de base de datos-->
         <dependency>
             <groupId>org.flywaydb</groupId>

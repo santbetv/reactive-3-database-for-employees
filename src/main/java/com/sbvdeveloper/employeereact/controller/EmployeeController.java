@@ -23,6 +23,11 @@ public class EmployeeController {
         return new ResponseEntity<>(employeeService.getAllEmployees(), HttpStatus.OK);
     }
 
+    @GetMapping("/employees/secondary")
+    public ResponseEntity<Flux<Employee>> getAllSecondaryEmployees() {
+        return new ResponseEntity<>(employeeService.getAllEmployeesSecundary(), HttpStatus.OK);
+    }
+
     @PostMapping("/employees")
     public ResponseEntity<Mono<Employee>> saveEmployee(@RequestBody Employee employee) {
         return new ResponseEntity<>(employeeService.saveEmployee(employee), HttpStatus.CREATED);

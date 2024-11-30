@@ -6,8 +6,14 @@ import reactor.core.publisher.Mono;
 
 public interface EmployeeService {
     Flux<Employee> getAllEmployees();
+
+    Flux<Employee> getAllEmployeesSecundary();
+
     Mono<Employee> getEmployeeById(Long id);
+
     Mono<Employee> saveEmployee(Employee employee);
+
     Mono<Employee> updateEmployee(Long id, Employee employee);
+
     Mono<Employee> deleteEmployee(Long id);
 }

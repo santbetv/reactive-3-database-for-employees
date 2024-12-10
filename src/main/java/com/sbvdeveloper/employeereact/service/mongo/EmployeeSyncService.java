@@ -37,7 +37,8 @@ public class EmployeeSyncService {
         return this.getEmployeeById(employee.getId())
                 .switchIfEmpty(Mono.just(employee).flatMap(p -> this.employeeMongoRepository.save(p)))
                 .then(Mono.just(employee));
-
+//        return Mono.just(employee).flatMap(p -> this.employeeMongoRepository.save(p))
+//                .then(Mono.just(employee));
     }
 
 

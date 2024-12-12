@@ -73,6 +73,62 @@ public class EmployeeServiceImpl implements EmployeeService {
                 }));
     }
 
+
+    //Usa flatMap si tu transformación devuelve un Mono o Flux.
+    //Usa map si tu transformación devuelve un objeto simple (sincrónico), por ejemplo, Mono.just("Hello").
+    //Usa map cuando solo necesitas transformar datos sin realizar operaciones que devuelvan flujos.
+    @Transactional
+    public Mono<Employee> saveEmployeeWithAdditionalLogic(Employee employee) {
+        //Se usa cuando transformas un valor de un flujo directamente a otro valor, sin crear otro flujo reactivo.
+        //Devuelve un flujo con el tipo transformado.
+        //No aplana flujos anidados.
+        Mono<Employee> employeeMono = Mono.just(employee)
+                .map(emp -> {
+                    emp.setRole("Updated Role");
+                    return emp; // Devuelve el mismo flujo con un tipo transformado
+                });
+
+        //Se usa cuando el resultado de la transformación es otro flujo reactivo (es decir, un Mono o Flux).
+        //Aplana flujos anidados, permitiendo que el resultado de un flujo interno continúe en el flujo principal.
+        //Ideal para operaciones asincrónicas o cuando necesitas realizar múltiples llamadas dentro de un flujo.
+        Mono<Employee> employeeMonoTwo = Mono.just(employee)
+                .flatMap(emp -> this.primaryR2dbcEntityTemplate.update(emp)); // Devuelve un flujo (Mono/Flux)
+
+
+        return this.primaryR2dbcEntityTemplate.select(Employee.class)
+                .matching(Query.query(Criteria.where("id").is(employee.getId())))
+                .one()
+                .flatMap(existingEmployee -> {// Operación asincrónica: devuelve un Mono
+                    // Si el empleado ya existe
+                    existingEmployee.setName(employee.getName());
+                    existingEmployee.setRole(employee.getRole());
+
+                    // Actualizamos el empleado
+                    return this.primaryR2dbcEntityTemplate.update(existingEmployee)
+                            .then(
+                                    // Insertar un registro adicional en otra tabla después de la actualización
+                                    //this.primaryR2dbcEntityTemplate.insert(new AuditLog("Empleado actualizado", existingEmployee.getId()))
+                            )
+                            .thenReturn(existingEmployee); // Devolver el empleado actualizado
+                })
+                .switchIfEmpty(
+                        Mono.defer(() -> {
+                            // Si el empleado no existe
+                            employee.setIsNew(true);
+
+                            // Insertamos el empleado y realizamos otra operación después
+                            return this.primaryR2dbcEntityTemplate.insert(employee)
+                                    .flatMap(newEmployee -> {
+                                        // Realizamos un update adicional
+                                        newEmployee.setRole("NEW_ROLE");
+                                        return this.primaryR2dbcEntityTemplate.update(newEmployee)
+                                                .thenReturn(newEmployee); // Devolver el empleado creado
+                                    });
+                        })
+                );
+    }
+
+
     @Override
     @Transactional
     public Mono<Employee> updateEmployee(Long id, Employee employee) {

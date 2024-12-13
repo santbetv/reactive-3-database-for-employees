@@ -104,6 +104,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                     existingEmployee.setRole(employee.getRole());
 
                     // Actualizamos el empleado
+                    //Usa .then: Cuando solo importa que la operación se complete, no el resultado.
                     return this.primaryR2dbcEntityTemplate.update(existingEmployee)
                             .then(
                                     // Insertar un registro adicional en otra tabla después de la actualización
@@ -126,6 +127,28 @@ public class EmployeeServiceImpl implements EmployeeService {
                                     });
                         })
                 );
+    }
+
+    //Ejemplo de flujo de procesamiento de empleados con R2dbcEntityTemplate, validando diferentes pasos
+    @Transactional
+    public Mono<Employee> processEmployeeFlow(Employee employee) {
+        return this.primaryR2dbcEntityTemplate.insert(employee) // Paso 1: Insertar
+                .flatMap(insertedEmployee -> {
+                    // Paso 2: Usar datos del insert para un select
+                    return this.primaryR2dbcEntityTemplate.select(Employee.class)
+                            .matching(Query.query(Criteria.where("id").is(insertedEmployee.getId())))
+                            .one()
+                            .flatMap(selectedEmployee -> {
+                                // Paso 3: Usar datos del select para un update
+                                selectedEmployee.setRole("Updated Role");
+                                //Usa .then: Cuando solo importa que la operación se complete, no el resultado.
+                                return this.primaryR2dbcEntityTemplate.update(selectedEmployee)
+                                        .then(Mono.just(selectedEmployee)); // Devuelve el empleado actualizado
+                            });
+                })
+                .doOnError(e -> {
+                    System.out.println("Error en el flujo: " + e.getMessage());
+                });
     }
 
 

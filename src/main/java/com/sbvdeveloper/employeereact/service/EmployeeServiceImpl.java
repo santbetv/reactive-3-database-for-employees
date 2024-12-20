@@ -20,6 +20,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Qualifier("secondaryR2dbcEntityTemplate")
     private final R2dbcEntityTemplate secondaryR2dbcEntityTemplate;
 
+
     public EmployeeServiceImpl(R2dbcEntityTemplate primaryR2dbcEntityTemplate, R2dbcEntityTemplate secondaryR2dbcEntityTemplate) {
         this.primaryR2dbcEntityTemplate = primaryR2dbcEntityTemplate;
         this.secondaryR2dbcEntityTemplate = secondaryR2dbcEntityTemplate;
@@ -33,7 +34,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Flux<Employee> getAllEmployees() {
         return this.primaryR2dbcEntityTemplate.select(Employee.class)
                 .all()
-                .doOnError(e -> System.out.println("Error al obtener empleados: " + e.getMessage()));
+                .doOnSubscribe(s -> System.out.println("Obteniendo empleados...Suscritos"))//Se ejecuta cuando se suscribe un observador
+                .doOnNext(e -> System.out.println("Empleado: " + e))//Se ejecuta cuando se recibe un elemento
+                .doOnComplete(() -> System.out.println("Empleados obtenidos correctamente...FIN"))//Se ejecuta cuando se completa la secuencia
+                .doOnError(e -> System.out.println("Error al obtener empleados: " + e.getMessage()));//Se ejecuta cuando se produce un error
     }
 
     @Override
